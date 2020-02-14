@@ -8,8 +8,9 @@ Authors: Joel Burton, Christian Fernandez, Meggie Mahnken, Katie Byers.
 
 from flask import Flask, render_template, redirect, flash
 import jinja2
-
+from markupsafe import escape
 import melons
+from flask import session
 
 app = Flask(__name__)
 
@@ -46,12 +47,11 @@ def show_melon(melon_id):
     """Return page showing the details of a given melon.
 
     Show all info about a melon. Also, provide a button to buy that melon.
-    """
-
-    melon = melons.get_by_id("meli")
+"""
+    melon = melons.get_by_id(escape(melon_id))
     print(melon)
-    return render_template("melon_details.html",
-                           display_melon=melon)
+
+    return render_template("melon_details.html", display_melon=melon)
 
 
 @app.route("/cart")
@@ -97,8 +97,15 @@ def add_to_cart(melon_id):
     # - increment the count for that melon id by 1
     # - flash a success message
     # - redirect the user to the cart page
-
-    return "Oops! This needs to be implemented!"
+    cart = {}
+    for melon in melon_id:
+        cart[melon] = cart.get(melon, 0) + 1
+        if cart in session:
+            session[cart] = {}
+        elif melon_id in cart:
+            cart[melon] = cart.get(melon, 0) + 1
+            print("success!")
+    return redirect("/cart")
 
 
 @app.route("/login", methods=["GET"])
